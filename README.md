@@ -1,2 +1,0 @@
-# Teti
-Information with soul
