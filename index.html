@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teti — Listen Differently</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --void:#0D0D0D; --ember:#EB5939; --stone:#b7ab98; --ash:#1a1a1a; --char:#2a2a2a; --muted:#5a5a5a; --dim:#3d3530; --off-white:#f0ece4; }
+    html { scroll-behavior: smooth; }
+    body { background:var(--void); color:var(--stone); font-family:'DM Mono',monospace; overflow-x:hidden; cursor:none; }
+    .cursor { position:fixed; width:10px; height:10px; background:var(--ember); border-radius:50%; pointer-events:none; z-index:9999; transform:translate(-50%,-50%); transition:width 0.2s,height 0.2s; }
+    .cursor-ring { position:fixed; width:36px; height:36px; border:0.5px solid var(--ember); border-radius:50%; pointer-events:none; z-index:9998; transform:translate(-50%,-50%); opacity:0.5; }
+    body::before { content:''; position:fixed; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events:none; z-index:9000; opacity:0.4; }
+
+    nav { position:fixed; top:0; left:0; right:0; z-index:100; padding:20px 48px; display:flex; align-items:center; justify-content:space-between; border-bottom:0.5px solid transparent; transition:border-color 0.4s,background 0.4s,backdrop-filter 0.4s; }
+    nav.scrolled { border-color:var(--char); background:rgba(13,13,13,0.88); backdrop-filter:blur(12px); }
+    .nav-logo { font-family:'Cormorant Garamond',serif; font-size:24px; letter-spacing:0.2em; color:var(--stone); font-weight:400; text-decoration:none; }
+    .nav-logo span { color:var(--ember); }
+    .nav-links { display:flex; align-items:center; gap:32px; }
+    .nav-link { font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); text-decoration:none; transition:color 0.2s; }
+    .nav-link:hover { color:var(--stone); }
+    .nav-cta { font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:#fff; background:var(--ember); padding:8px 20px; border-radius:2px; text-decoration:none; transition:opacity 0.2s; }
+    .nav-cta:hover { opacity:0.85; }
+
+    .hero { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:120px 48px 80px; position:relative; overflow:hidden; }
+    .hero-bg-ring { position:absolute; border-radius:50%; border:0.5px solid var(--char); pointer-events:none; top:50%; left:50%; }
+    .hero-bg-ring:nth-child(1) { width:300px; height:300px; transform:translate(-50%,-50%); animation:ringPulse 6s ease-in-out infinite; }
+    .hero-bg-ring:nth-child(2) { width:520px; height:520px; transform:translate(-50%,-50%); animation:ringPulse 6s ease-in-out infinite 1.2s; }
+    .hero-bg-ring:nth-child(3) { width:760px; height:760px; transform:translate(-50%,-50%); animation:ringPulse 6s ease-in-out infinite 2.4s; }
+    .hero-bg-ring:nth-child(4) { width:1020px; height:1020px; transform:translate(-50%,-50%); animation:ringPulse 6s ease-in-out infinite 3.6s; }
+    @keyframes ringPulse { 0%,100%{opacity:0.25;} 50%{opacity:0.05;} }
+
+    .hero-eyebrow { font-size:10px; letter-spacing:0.25em; text-transform:uppercase; color:var(--ember); margin-bottom:24px; opacity:0; animation:fadeUp 1s ease 0.3s forwards; }
+    .hero-wordmark { font-family:'Cormorant Garamond',serif; font-size:clamp(80px,15vw,160px); font-weight:300; letter-spacing:0.3em; color:var(--stone); line-height:1; margin-bottom:8px; opacity:0; animation:fadeUp 1.2s ease 0.5s forwards; position:relative; z-index:2; }
+    .hero-wordmark span { color:var(--ember); }
+    .hero-tagline { font-family:'Cormorant Garamond',serif; font-size:clamp(18px,3vw,28px); font-style:italic; font-weight:300; color:var(--stone); opacity:0; animation:fadeUp 1.2s ease 0.8s forwards; margin-bottom:16px; position:relative; z-index:2; }
+    .hero-sub { font-size:11px; letter-spacing:0.06em; color:var(--muted); max-width:480px; line-height:1.9; opacity:0; animation:fadeUp 1.2s ease 1s forwards; margin-bottom:48px; position:relative; z-index:2; }
+    .hero-actions { display:flex; gap:16px; align-items:center; opacity:0; animation:fadeUp 1.2s ease 1.2s forwards; position:relative; z-index:2; flex-wrap:wrap; justify-content:center; }
+    .btn-primary { background:var(--ember); color:#fff; border:none; padding:14px 32px; font-size:11px; letter-spacing:0.14em; text-transform:uppercase; font-family:'DM Mono',monospace; cursor:none; border-radius:2px; transition:opacity 0.2s; text-decoration:none; display:inline-block; }
+    .btn-primary:hover { opacity:0.85; }
+    .btn-ghost { background:transparent; color:var(--stone); border:0.5px solid var(--char); padding:14px 32px; font-size:11px; letter-spacing:0.14em; text-transform:uppercase; font-family:'DM Mono',monospace; cursor:none; border-radius:2px; transition:border-color 0.2s; text-decoration:none; display:inline-block; }
+    .btn-ghost:hover { border-color:var(--stone); }
+    .hero-scroll { position:absolute; bottom:32px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:8px; opacity:0; animation:fadeUp 1s ease 2s forwards; }
+    .scroll-line { width:0.5px; height:48px; background:linear-gradient(to bottom,var(--ember),transparent); animation:scrollDrop 2s ease-in-out infinite; }
+    .scroll-label { font-size:8px; letter-spacing:0.2em; color:var(--muted); text-transform:uppercase; }
+    @keyframes scrollDrop { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(24px);} to{opacity:1;transform:translateY(0);} }
+
+    .manifesto { padding:120px 48px; max-width:900px; margin:0 auto; }
+    .section-label { font-size:9px; letter-spacing:0.25em; text-transform:uppercase; color:var(--ember); margin-bottom:40px; display:flex; align-items:center; gap:16px; }
+    .section-label::after { content:''; flex:1; height:0.5px; background:var(--char); }
+    .manifesto-text { font-family:'Cormorant Garamond',serif; font-size:clamp(26px,3.8vw,42px); font-weight:300; line-height:1.55; color:var(--stone); }
+    .manifesto-text em { color:var(--ember); font-style:italic; }
+    .manifesto-text strong { color:var(--off-white); font-weight:400; }
+
+    .features { padding:80px 48px 120px; max-width:1100px; margin:0 auto; }
+    .features-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--char); border:0.5px solid var(--char); margin-top:48px; }
+    .feature-card { background:var(--void); padding:40px 32px; position:relative; overflow:hidden; transition:background 0.3s; }
+    .feature-card:hover { background:var(--ash); }
+    .feature-card::before { content:''; position:absolute; top:0; left:0; width:2px; height:0; background:var(--ember); transition:height 0.4s ease; }
+    .feature-card:hover::before { height:100%; }
+    .feature-num { font-size:9px; letter-spacing:0.2em; color:var(--muted); margin-bottom:24px; }
+    .feature-icon { font-size:26px; margin-bottom:14px; display:block; }
+    .feature-title { font-family:'Cormorant Garamond',serif; font-size:22px; color:var(--stone); font-weight:400; margin-bottom:12px; line-height:1.2; }
+    .feature-desc { font-size:11px; color:var(--muted); line-height:1.85; }
+
+    .soul-section { padding:120px 48px; display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:center; max-width:1100px; margin:0 auto; border-top:0.5px solid var(--char); }
+    .soul-ring-outer { width:260px; height:260px; border-radius:50%; border:0.5px solid var(--char); display:flex; align-items:center; justify-content:center; margin:0 auto; position:relative; }
+    .soul-ring-inner { width:200px; height:200px; border-radius:50%; border:0.5px solid var(--dim); display:flex; align-items:center; justify-content:center; flex-direction:column; gap:4px; }
+    .soul-big-num { font-family:'Cormorant Garamond',serif; font-size:80px; color:var(--ember); font-weight:300; line-height:1; }
+    .soul-label-sm { font-size:9px; letter-spacing:0.2em; color:var(--muted); text-transform:uppercase; }
+    .soul-orbit { position:absolute; width:8px; height:8px; background:var(--ember); border-radius:50%; top:-4px; left:calc(50% - 4px); transform-origin:4px 134px; animation:orbit 8s linear infinite; }
+    @keyframes orbit { from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+    .soul-text h2 { font-family:'Cormorant Garamond',serif; font-size:clamp(26px,3.2vw,38px); color:var(--stone); font-weight:300; line-height:1.35; margin-bottom:20px; }
+    .soul-text h2 em { color:var(--ember); font-style:italic; }
+    .soul-text p { font-size:11px; color:var(--muted); line-height:1.9; margin-bottom:16px; }
+
+    .render-section { padding:80px 48px 120px; max-width:1100px; margin:0 auto; border-top:0.5px solid var(--char); }
+    .render-modes { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:48px; }
+    .render-mode-card { border:0.5px solid var(--char); padding:40px 28px; position:relative; }
+    .render-mode-card.featured { border-color:var(--ember); background:var(--ash); }
+    .render-mode-tag { font-size:8px; letter-spacing:0.2em; text-transform:uppercase; color:var(--ember); margin-bottom:20px; }
+    .render-mode-name { font-family:'Cormorant Garamond',serif; font-size:32px; color:var(--stone); font-weight:300; margin-bottom:12px; }
+    .render-mode-desc { font-size:11px; color:var(--muted); line-height:1.85; margin-bottom:24px; }
+    .render-mode-traits { display:flex; flex-direction:column; gap:8px; }
+    .render-trait { display:flex; align-items:center; gap:10px; font-size:10px; color:var(--muted); }
+    .render-trait::before { content:''; width:20px; height:0.5px; background:var(--ember); flex-shrink:0; }
+
+    .waitlist { padding:120px 48px; text-align:center; border-top:0.5px solid var(--char); position:relative; overflow:hidden; }
+    .waitlist::before { content:'TETI'; position:absolute; font-family:'Cormorant Garamond',serif; font-size:28vw; font-weight:300; color:var(--ash); top:50%; left:50%; transform:translate(-50%,-50%); letter-spacing:0.3em; pointer-events:none; user-select:none; white-space:nowrap; }
+    .waitlist-inner { position:relative; z-index:2; }
+    .waitlist h2 { font-family:'Cormorant Garamond',serif; font-size:clamp(36px,6vw,72px); font-weight:300; color:var(--stone); line-height:1.2; margin-bottom:16px; }
+    .waitlist h2 em { color:var(--ember); font-style:italic; }
+    .waitlist-sub { font-size:11px; color:var(--muted); margin:0 auto 48px; letter-spacing:0.06em; line-height:1.9; max-width:420px; }
+    .waitlist-form { display:flex; gap:0; max-width:480px; margin:0 auto 24px; }
+    .waitlist-input { flex:1; background:var(--ash); border:0.5px solid var(--char); border-right:none; padding:14px 20px; font-size:11px; color:var(--stone); font-family:'DM Mono',monospace; outline:none; letter-spacing:0.06em; }
+    .waitlist-input::placeholder { color:var(--muted); }
+    .waitlist-input:focus { border-color:var(--stone); }
+    .waitlist-submit { background:var(--ember); color:#fff; border:none; padding:14px 28px; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; font-family:'DM Mono',monospace; cursor:none; transition:opacity 0.2s; }
+    .waitlist-submit:hover { opacity:0.85; }
+    .waitlist-note { font-size:9px; color:var(--muted); letter-spacing:0.1em; }
+    .waitlist-count { display:inline-flex; align-items:center; gap:8px; margin-top:32px; font-size:10px; color:var(--muted); }
+    .waitlist-count-dot { width:6px; height:6px; border-radius:50%; background:var(--ember); animation:dotPulse 2s ease-in-out infinite; }
+    @keyframes dotPulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+    footer { padding:40px 48px; border-top:0.5px solid var(--char); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px; }
+    .footer-logo { font-family:'Cormorant Garamond',serif; font-size:18px; letter-spacing:0.18em; color:var(--stone); font-weight:400; }
+    .footer-logo span { color:var(--ember); }
+    .footer-by { font-size:9px; letter-spacing:0.15em; color:var(--muted); text-transform:uppercase; margin-top:5px; }
+    .footer-links { display:flex; gap:24px; }
+    .footer-link { font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); text-decoration:none; transition:color 0.2s; }
+    .footer-link:hover { color:var(--stone); }
+
+    .reveal { opacity:0; transform:translateY(32px); transition:opacity 0.8s ease,transform 0.8s ease; }
+    .reveal.visible { opacity:1; transform:translateY(0); }
+    .reveal-delay-1 { transition-delay:0.1s; }
+    .reveal-delay-2 { transition-delay:0.22s; }
+    .reveal-delay-3 { transition-delay:0.34s; }
+    .reveal-delay-4 { transition-delay:0.46s; }
+    .reveal-delay-5 { transition-delay:0.58s; }
+
+    .toast { position:fixed; bottom:32px; left:50%; transform:translateX(-50%) translateY(80px); background:var(--ash); border:0.5px solid var(--ember); color:var(--stone); font-size:11px; padding:12px 24px; border-radius:2px; letter-spacing:0.08em; z-index:999; transition:transform 0.4s ease; white-space:nowrap; }
+    .toast.show { transform:translateX(-50%) translateY(0); }
+
+    @media (max-width:768px) {
+      nav { padding:16px 24px; }
+      .nav-links { display:none; }
+      .hero,.manifesto { padding:100px 24px 60px; }
+      .features,.render-section,.soul-section { padding:60px 24px 80px; }
+      .features-grid,.render-modes { grid-template-columns:1fr; }
+      .soul-section { grid-template-columns:1fr; gap:48px; }
+      .waitlist { padding:80px 24px; }
+      .waitlist-form { flex-direction:column; }
+      .waitlist-input { border-right:0.5px solid var(--char); border-bottom:none; }
+      footer { padding:32px 24px; flex-direction:column; text-align:center; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<nav id="nav">
+  <a href="#" class="nav-logo">TE<span>T</span>I</a>
+  <div class="nav-links">
+    <a href="#features" class="nav-link">Features</a>
+    <a href="#render" class="nav-link">Render modes</a>
+    <a href="#soul" class="nav-link">Soul score</a>
+    <a href="#waitlist" class="nav-cta">Join waitlist</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-bg-ring"></div>
+  <div class="hero-bg-ring"></div>
+  <div class="hero-bg-ring"></div>
+  <div class="hero-bg-ring"></div>
+  <p class="hero-eyebrow">By Gabbibada Ltd &nbsp;·&nbsp; Podcast experience engine</p>
+  <h1 class="hero-wordmark">TE<span>T</span>I</h1>
+  <p class="hero-tagline">Information with soul.</p>
+  <p class="hero-sub">The Yoruba word for listen. A new standard for how podcast creators deliver — and how the world receives — sound.</p>
+  <div class="hero-actions">
+    <a href="#waitlist" class="btn-primary">Join the waitlist</a>
+    <a href="#features" class="btn-ghost">See how it works</a>
+  </div>
+  <div class="hero-scroll">
+    <div class="scroll-line"></div>
+    <span class="scroll-label">Scroll</span>
+  </div>
+</section>
+
+<section class="manifesto">
+  <div class="section-label reveal">Manifesto</div>
+  <p class="manifesto-text reveal reveal-delay-1">
+    The podcast world is full of <em>platforms</em>.<br>
+    None of them are <strong>experiences</strong>.<br><br>
+    Every great creator pours intention into their craft —
+    the pacing, the silence, the build.<br>
+    Then a grid of thumbnails swallows it whole.<br><br>
+    <em>Teti is different.</em><br>
+    We built a system where the technology<br>
+    is as inspired as the content itself.
+  </p>
+</section>
+
+<section class="features" id="features">
+  <div class="section-label reveal">The engine</div>
+  <div class="features-grid">
+    <div class="feature-card reveal reveal-delay-1">
+      <div class="feature-num">01</div>
+      <span class="feature-icon">⬡</span>
+      <h3 class="feature-title">Cinematic delivery</h3>
+      <p class="feature-desc">Every episode is rendered — not just uploaded. Motion, typography, sonic framing, and pacing work in concert to carry your content the way it deserves.</p>
+    </div>
+    <div class="feature-card reveal reveal-delay-2">
+      <div class="feature-num">02</div>
+      <span class="feature-icon">◎</span>
+      <h3 class="feature-title">Intelligent chaptering</h3>
+      <p class="feature-desc">AI detects narrative shifts in your audio and generates cinematic chapter markers automatically. Listeners navigate your episode like a film — not a scrubber.</p>
+    </div>
+    <div class="feature-card reveal reveal-delay-3">
+      <div class="feature-num">03</div>
+      <span class="feature-icon">◈</span>
+      <h3 class="feature-title">Adaptive pacing</h3>
+      <p class="feature-desc">The system learns from your audience in real time. Engagement signals reshape delivery rhythm dynamically — so every listener gets the version that resonates.</p>
+    </div>
+    <div class="feature-card reveal reveal-delay-1">
+      <div class="feature-num">04</div>
+      <span class="feature-icon">◇</span>
+      <h3 class="feature-title">Sonic atmosphere</h3>
+      <p class="feature-desc">Atmospheric audio framing is applied at intros, transitions, and closes. Not music. Not ads. A cinematic layer that makes the listening experience feel complete.</p>
+    </div>
+    <div class="feature-card reveal reveal-delay-2">
+      <div class="feature-num">05</div>
+      <span class="feature-icon">⬙</span>
+      <h3 class="feature-title">Emotion mapping</h3>
+      <p class="feature-desc">Teti detects tonal shifts in speech — tension, revelation, warmth, urgency — and aligns the sonic render to the emotional register of each moment.</p>
+    </div>
+    <div class="feature-card reveal reveal-delay-3">
+      <div class="feature-num">06</div>
+      <span class="feature-icon">✦</span>
+      <h3 class="feature-title">Cross-episode learning</h3>
+      <p class="feature-desc">Over time, the system builds a model of your audience. Every episode render gets sharper, more precise, more attuned to the people who listen to you.</p>
+    </div>
+  </div>
+</section>
+
+<section class="soul-section" id="soul">
+  <div class="reveal" style="text-align:center;">
+    <div class="soul-ring-outer">
+      <div class="soul-orbit"></div>
+      <div class="soul-ring-inner">
+        <div class="soul-big-num">9.6</div>
+        <div class="soul-label-sm">Soul score</div>
+      </div>
+    </div>
+  </div>
+  <div class="soul-text">
+    <div class="section-label reveal">Soul score</div>
+    <h2 class="reveal reveal-delay-1">The metric that <em>no one else</em> measures.</h2>
+    <p class="reveal reveal-delay-2">Every episode rendered through Teti receives a Soul Score — a proprietary measure of the cinematic quality of the listener experience.</p>
+    <p class="reveal reveal-delay-3">It accounts for pacing, emotional register, sonic coherence, listener engagement prediction, and narrative structure. A number that tells you not just how many people listened — but how deeply they felt it.</p>
+    <p class="reveal reveal-delay-4" style="color:var(--ember); font-style:italic; font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:300;">"Cinematic, intelligent, and deeply human."</p>
+  </div>
+</section>
+
+<section class="render-section" id="render">
+  <div class="section-label reveal">Render modes</div>
+  <div class="render-modes">
+    <div class="render-mode-card reveal reveal-delay-1">
+      <div class="render-mode-tag">Mode 01</div>
+      <div class="render-mode-name">Intimate</div>
+      <p class="render-mode-desc">Close, warm, conversational. For creators who make you feel like you're in the room with them.</p>
+      <div class="render-mode-traits">
+        <div class="render-trait">Soft sonic framing</div>
+        <div class="render-trait">Unhurried pacing</div>
+        <div class="render-trait">Personal atmosphere</div>
+      </div>
+    </div>
+    <div class="render-mode-card featured reveal reveal-delay-2">
+      <div class="render-mode-tag">Mode 02 &nbsp;—&nbsp; Signature</div>
+      <div class="render-mode-name">Cinematic</div>
+      <p class="render-mode-desc">Expansive, scored, layered. For creators building something that feels like a world, not just a conversation.</p>
+      <div class="render-mode-traits">
+        <div class="render-trait">Full sonic architecture</div>
+        <div class="render-trait">Dramatic chapter transitions</div>
+        <div class="render-trait">Maximum soul depth</div>
+      </div>
+    </div>
+    <div class="render-mode-card reveal reveal-delay-3">
+      <div class="render-mode-tag">Mode 03</div>
+      <div class="render-mode-name">Editorial</div>
+      <p class="render-mode-desc">Precise, minimal, authoritative. For voices that don't need atmosphere — just presence.</p>
+      <div class="render-mode-traits">
+        <div class="render-trait">Clean, unadorned delivery</div>
+        <div class="render-trait">Structured chaptering</div>
+        <div class="render-trait">Intelligence over atmosphere</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="waitlist" id="waitlist">
+  <div class="waitlist-inner">
+    <div class="section-label reveal" style="justify-content:center; max-width:480px; margin:0 auto 24px;">Early access</div>
+    <h2 class="reveal reveal-delay-1">Ready to listen <em>differently?</em></h2>
+    <p class="waitlist-sub reveal reveal-delay-2">Teti is in development. Join the waitlist and be among the first creators to render their episodes through the soul engine.</p>
+    <div class="waitlist-form reveal reveal-delay-3">
+      <input type="email" class="waitlist-input" placeholder="your@email.com" id="emailInput">
+      <button class="waitlist-submit" onclick="joinWaitlist()">Join waitlist</button>
+    </div>
+    <p class="waitlist-note reveal reveal-delay-4">No spam. No noise. Just Teti — when it's ready.</p>
+    <div class="waitlist-count reveal reveal-delay-5">
+      <div class="waitlist-count-dot"></div>
+      <span>247 creators already waiting</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div>
+    <div class="footer-logo">TE<span>T</span>I</div>
+    <div class="footer-by">By Gabbibada Ltd</div>
+  </div>
+  <div class="footer-links">
+    <a href="#" class="footer-link">Twitter</a>
+    <a href="#" class="footer-link">Instagram</a>
+    <a href="#" class="footer-link">LinkedIn</a>
+    <a href="#" class="footer-link">Contact</a>
+  </div>
+  <div class="footer-by">© 2025 Gabbibada Ltd. All rights reserved.</div>
+</footer>
+
+<div class="toast" id="toast">✦ You're on the list. We'll be in touch.</div>
+
+<script>
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx=0,my=0,rx=0,ry=0;
+  document.addEventListener('mousemove',e=>{
+    mx=e.clientX; my=e.clientY;
+    cursor.style.left=mx+'px'; cursor.style.top=my+'px';
+  });
+  (function animRing(){
+    rx+=(mx-rx)*0.12; ry+=(my-ry)*0.12;
+    ring.style.left=rx+'px'; ring.style.top=ry+'px';
+    requestAnimationFrame(animRing);
+  })();
+  document.querySelectorAll('a,button,input').forEach(el=>{
+    el.addEventListener('mouseenter',()=>{cursor.style.width='5px';cursor.style.height='5px';ring.style.width='52px';ring.style.height='52px';});
+    el.addEventListener('mouseleave',()=>{cursor.style.width='10px';cursor.style.height='10px';ring.style.width='36px';ring.style.height='36px';});
+  });
+
+  window.addEventListener('scroll',()=>{
+    document.getElementById('nav').classList.toggle('scrolled',window.scrollY>40);
+  });
+
+  const obs = new IntersectionObserver(entries=>{
+    entries.forEach(e=>{ if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target);} });
+  },{threshold:0.12});
+  document.querySelectorAll('.reveal').forEach(r=>obs.observe(r));
+
+  function joinWaitlist(){
+    const input=document.getElementById('emailInput');
+    const toast=document.getElementById('toast');
+    if(!input.value||!input.value.includes('@')){input.style.borderColor='var(--ember)';setTimeout(()=>input.style.borderColor='',1500);return;}
+    input.value='';
+    toast.classList.add('show');
+    setTimeout(()=>toast.classList.remove('show'),4000);
+  }
+  document.getElementById('emailInput').addEventListener('keydown',e=>{if(e.key==='Enter')joinWaitlist();});
+</script>
+</body>
+</html>
